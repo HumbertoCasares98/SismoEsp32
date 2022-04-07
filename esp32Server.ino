@@ -3,8 +3,10 @@
 #include <ESPAsyncWebServer.h>
 
 const int derA = 18; 
-const int derB = 19; 
-int vel;
+const int derB = 19;
+const int derA1 = 22;
+const int derB1 = 23; 
+int i=0;
 
 // Replace with your network credentials
 const char* ssid = "Lab Electronic";
@@ -28,32 +30,119 @@ const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE HTML><html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ESP Web Server</title>
+  <title>SismoSim</title>
   <style>
-    html {font-family: Arial; display: inline-block; text-align: center;}
-    h2 {font-size: 2.3rem;}
-    p {font-size: 1.9rem;}
-    body {max-width: 400px; margin:0px auto; padding-bottom: 25px;}
-    .slider { -webkit-appearance: none; margin: 14px; width: 360px; height: 25px; background: #FFD65C;
-      outline: none; -webkit-transition: .2s; transition: opacity .2s;}
-    .slider::-webkit-slider-thumb {-webkit-appearance: none; appearance: none; width: 35px; height: 35px; background: #003249; cursor: pointer;}
-    .slider::-moz-range-thumb { width: 35px; height: 35px; background: #003249; cursor: pointer; } 
+    
+  html {
+  font-family: Arial; display: inline-block; text-align: center;
+   font-size: 2.5em; /* 40px/16=2.5em */
+  width: 100%;
+  height:100%;
+  background: linear-gradient(-45deg, #23a6d5, #23d5ab);
+}
+
+
+form {
+  width: 300px;
+  margin: 0 auto;
+  text-align: center;
+  padding-top: 50px;
+}
+
+.value-button {
+  display: inline-block;
+  border: 1px solid #ddd;
+  margin: 10px;
+  width: 80px;
+  height: 30px;
+  text-align: center;
+  vertical-align: middle;
+  padding: 11px 0;
+  color: white;
+  background: #000;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.value-button:hover {
+  cursor: pointer;
+}
+
+form #decrease {
+  margin-right: -4px;
+  border-radius: 8px 0 0 8px;
+}
+
+form #increase {
+  margin-left: -4px;
+  border-radius: 0 8px 8px 0;
+}
+
+form #input-wrap {
+  margin: 0px;
+  padding: 0px;
+}
+
+input#number {
+  font-family: Arial; 
+   font-size: 1.5em; /
+  text-align: center;
+  border: none;
+  border-bottom: 1px solid #ddd;
+  margin: 0px;
+  width: 200px;
+  height: 120px;
+}
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
   </style>
 </head>
 <body>
-  <h2>ESP Web Server</h2>
-  <p><span id="textSliderValue">%SLIDERVALUE%</span></p>
-  <p><input type="range" onchange="updateSliderPWM(this)" id="pwmSlider" min="0" max="255" value="%SLIDERVALUE%" step="1" class="slider"></p>
-<script>
-function updateSliderPWM(element) {
-  var sliderValue = document.getElementById("pwmSlider").value;
-  document.getElementById("textSliderValue").innerHTML = sliderValue;
-  console.log(sliderValue);
-  var xhr = new XMLHttpRequest();
-  xhr.open("GET", "/slider?value="+sliderValue, true);
-  xhr.send();
-}
-</script>
+  <h2>Simulador de Sismos FI-UAGro</h2>
+    
+    <form>
+        <div class="value-button" id="decrease" onclick="decreaseValue()" value="Decrease Value">-</div>
+          <input type="number" id="textSliderValue" min="0" max="255" value="35" disabled />
+        <div class="value-button" id="increase" onclick="increaseValue()" value="Increase Value">+</div>
+    </form>
+
+  
+  <script>
+    function updatePWM(val) {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "/slider?value="+val, true);
+      xhr.send();
+    }
+
+    function increaseValue() {
+      var value = parseInt(document.getElementById('textSliderValue').value, 10);
+     if(value<255){
+        value=value+5;
+      }
+      document.getElementById('textSliderValue').value = value;
+      updatePWM(value);
+    }
+    
+    function decreaseValue() {
+      var value = parseInt(document.getElementById('textSliderValue').value, 10);
+      if(value==0){
+        value=0;
+      }else if(value>0){
+        value=value-5;
+      }
+      document.getElementById('textSliderValue').value = value;
+      updatePWM(value);
+    }
+  </script>
+  
 </body>
 </html>
 )rawliteral";
@@ -104,10 +193,11 @@ void setup(){
     if (request->hasParam(PARAM_INPUT)) {
       inputMessage = request->getParam(PARAM_INPUT)->value();
       sliderValue = inputMessage;
-      //vel=sliderValue.toInt();
+     /* for (i=35;i==255;i+5){
+          ledcWrite(ledChannel, i);
+          delay(10000);
+        }*/
       ledcWrite(ledChannel, sliderValue.toInt());
-      //analogWrite(derA,vel);
-      //analogWrite(derB,0);
     }
     else {
       inputMessage = "No message sent";
